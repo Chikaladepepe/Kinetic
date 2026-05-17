@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kinetic Core | Ascension</title>
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <style>
+        :root { --glow: #ff9d00; --bg: #050505; --red: #ff4d4d; --dark: #1a1000; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: var(--bg); color: var(--glow); font-family: 'Share Tech Mono', monospace; overflow: hidden; text-transform: uppercase; }
+
+        /* HUD TOP */
+        .header { padding: 20px; text-align: center; border-bottom: 1px solid rgba(255, 157, 0, 0.2); background: rgba(0,0,0,0.9); }
+        .rank-tag { font-size: 0.7rem; color: #fff; letter-spacing: 3px; }
+        .xp-bar-wrap { width: 100%; height: 4px; background: var(--dark); margin-top: 10px; }
+        #xp-fill { height: 100%; background: var(--glow); width: 0%; transition: width 0.5s; box-shadow: 0 0 10px var(--glow); }
+
+        /* MAIN AREA */
+        .content { padding: 20px; height: calc(100% - 180px); overflow-y: auto; scrollbar-width: none; }
+        .quest-card { border: 1px solid rgba(255, 157, 0, 0.2); padding: 15px; margin-bottom: 15px; background: rgba(255,255,255,0.02); }
+        .quest-title { font-size: 0.8rem; color: #fff; display: block; margin-bottom: 5px; }
+        .quest-reward { font-size: 0.6rem; color: var(--glow); opacity: 0.8; }
+        .btn-start { width: 100%; margin-top: 10px; background: none; border: 1px solid var(--glow); color: var(--glow); padding: 10px; font-family: 'Share Tech Mono'; cursor: pointer; }
+
+        /* FOCUS MODE OVERLAY */
+        #focus-mode { position: fixed; inset: 0; background: #000; z-index: 2000; display: none; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 30px; }
+        .timer-display { font-size: 4rem; font-weight: bold; margin-bottom: 20px; }
+        .penalty-notice { color: var(--red); font-size: 0.7rem; margin-top: 10px; animation: flash 1s infinite; display: none; }
+        @keyframes flash { 50% { opacity: 0; } }
+        .quote-display { font-size: 0.8rem; color: #fff; line-height: 1.6; font-style: italic; max-width: 300px; }
+
+        /* STATS FOOTER */
+        .footer { position: fixed; bottom: 0; width: 100%; padding: 20px; background: #000; border-top: 1px solid rgba(255, 157, 0, 0.2); display: flex; justify-content: space-around; }
+        .stat-box { text-align: center; }
+        .stat-val { font-size: 1.2rem; font-weight: bold; display: block; }
+        .stat-lbl { font-size: 0.5rem; opacity: 0.5; }
+    </style>
+</head>
+<body>
+
+    <!-- FOCUS MODE -->
+    <div id="focus-mode">
+        <div id="p-notice" class="penalty-notice">INTEGRITY_BREACH: +10s PENALTY ADDED</div>
+        <div class="timer-display" id="timer">00</div>
+        <div class="quote-display" id="quote">"I CAN DO ALL THINGS THROUGH CHRIST WHO STRENGTHENS ME."</div>
+        <div style="margin-top:40px; font-size:0.6rem; opacity:0.4;">DO NOT EXIT APP // FOCUS ACTIVE</div>
+    </div>
+
+    <div class="header">
+        <div class="rank-tag" id="rank-name">CADET [LVL 0]</div>
+        <div class="xp-bar-wrap"><div id="xp-fill"></div></div>
+    </div>
+
+    <div class="content" id="quest-list">
+        <!-- Quests will be injected here -->
+    </div>
+
+    <div class="footer">
+        <div class="stat-box"><span class="stat-val" id="stat-kc">0</span><span class="stat-lbl">KINETIC_CREDITS</span></div>
+        <div class="stat-box"><span class="stat-val" id="stat-lvl">0</span><span class="stat-lbl">CURRENT_LEVEL</span></div>
+    </div>
+
+    <script>
+        // SYSTEM DATA
+        const quests = [
+            { id: 'q1', title: "Pectoral Wall Initiation", type: "reps", amt: 20, time: 30, xp: 20, kc: 50, desc: "20 Wall Push-ups" },
+            { id: 'q2', title: "Structural Integrity", type: "static", amt: 20, time: 20, xp: 15, kc: 40, desc: "20 Sec Forearm Plank" },
+            { id: 'q3', title: "Engine Stamina Burn", type: "static", amt: 45, time: 45, xp: 30, kc: 80, desc: "45 Sec Shadow Boxing" }
+        ];
+
+        const scriptures = [
+            "PHILIPPIANS 4:13 - I CAN DO ALL THINGS THROUGH CHRIST.",
+            "GALATIANS 6:9 - DO NOT GROW WEARY IN DOING GOOD.",
+            "1 CORINTHIANS 9:27 - I DISCIPLINE MY BODY.",
+            "ISAIAH 40:31 - THEY SHALL RUN AND NOT BE WEARY.",
+            "PROVERBS 14:23 - ALL HARD WORK BRINGS A PROFIT."
+        ];
+
+        let state = JSON.parse(localStorage.getItem('kinetic_save')) || { xp: 0, level: 0, kc: 0 };
+        let activeQuest = null;
+        let timeLeft = 0;
+        let timerRunning = false;
+        let penaltyAdded = false;
+
+        function renderQuests() {
+            const list = document.getElementById('quest-list');
+            list.innerHTML = quests.map(q => `
+                <div class="quest-card">
+                    <span class="quest-title">>> ${q.title}</span>
+                    <div class="quest-reward">${q.desc} | REWARD: ${q.xp}XP / ${q.kc}KC</div>
+                    <button class="btn-start" onclick="startQuest('${q.id}')">[ START_PROTOCOL ]</button>
+                </div>
+            `).join('');
+        }
+
+        function startQuest(id) {
+            activeQuest = quests.find(q => q.id === id);
+            timeLeft = activeQuest.time;
+            document.getElementById('timer').innerText = timeLeft;
+            document.getElementById('quote').innerText = scriptures[Math.floor(Math.random() * scriptures.length)];
+            document.getElementById('focus-mode').style.display = 'flex';
+            document.getElementById('p-notice').style.display = 'none';
+            penaltyAdded = false;
+            timerRunning = true;
+        }
+
+        // INTEGRITY PROTOCOL
+        document.addEventListener("visibilitychange", () => {
+            if (document.hidden && timerRunning) {
+                // BREACH DETECTED
+                timeLeft += 10;
+                penaltyAdded = true;
+                document.getElementById('timer').innerText = timeLeft;
+                document.getElementById('p-notice').style.display = 'block';
+            }
+        });
+
+        setInterval(() => {
+            if (timerRunning && timeLeft > 0) {
+                timeLeft--;
+                document.getElementById('timer').innerText = timeLeft;
+                if (timeLeft <= 0) {
+                    completeQuest();
+                }
+            }
+        }, 1000);
+
+        function completeQuest() {
+            timerRunning = false;
+            state.xp += activeQuest.xp;
+            state.kc += activeQuest.kc;
+            
+            // Level Calculation
+            state.level = Math.floor(state.xp / 100);
+            
+            localStorage.setItem('kinetic_save', JSON.stringify(state));
+            document.getElementById('focus-mode').style.display = 'none';
+            updateHUD();
+            alert(`PROTOCOL COMPLETE: +${activeQuest.xp}XP / +${activeQuest.kc}KC`);
+        }
+
+        function updateHUD() {
+            const ranks = ["CADET", "HUNTER", "GUARDIAN", "MASTER ARCHITECT", "ASCENDED"];
+            const rankIdx = Math.min(state.level, ranks.length - 1);
+            
+            document.getElementById('rank-name').innerText = `${ranks[rankIdx]} [LVL ${state.level}]`;
+            document.getElementById('stat-kc').innerText = state.kc;
+            document.getElementById('stat-lvl').innerText = state.level;
+            
+            const progress = (state.xp % 100);
+            document.getElementById('xp-fill').style.width = progress + "%";
+        }
+
+        renderQuests();
+        updateHUD();
+    </script>
+</body>
+                                </html>
