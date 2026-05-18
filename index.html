@@ -2,33 +2,42 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#ff9d00">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>Kinetic Core | Ascension</title>
+    
+    <!-- THE ICON FIX -->
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icon.png">
+
     <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <style>
-        :root { --glow: #ff9d00; --bg: #050505; --red: #ff4d4d; --dark: #1a1000; }
+        :root { --glow: #ff9d00; --bg: #050505; --red: #ff4d4d; --green: #4dff88; --dark: #1a1000; }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: var(--bg); color: var(--glow); font-family: 'Share Tech Mono', monospace; overflow: hidden; text-transform: uppercase; }
 
         /* HUD TOP */
         .header { padding: 20px; text-align: center; border-bottom: 1px solid rgba(255, 157, 0, 0.2); background: rgba(0,0,0,0.9); }
-        .rank-tag { font-size: 0.7rem; color: #fff; letter-spacing: 3px; }
+        .rank-tag { font-size: 0.7rem; color: #fff; letter-spacing: 3px; margin-bottom: 5px; }
+        .streak-tag { font-size: 0.6rem; color: var(--green); }
         .xp-bar-wrap { width: 100%; height: 4px; background: var(--dark); margin-top: 10px; }
         #xp-fill { height: 100%; background: var(--glow); width: 0%; transition: width 0.5s; box-shadow: 0 0 10px var(--glow); }
 
         /* MAIN AREA */
-        .content { padding: 20px; height: calc(100% - 180px); overflow-y: auto; scrollbar-width: none; }
+        .content { padding: 20px; height: calc(100% - 200px); overflow-y: auto; scrollbar-width: none; }
         .quest-card { border: 1px solid rgba(255, 157, 0, 0.2); padding: 15px; margin-bottom: 15px; background: rgba(255,255,255,0.02); }
+        .quest-card.completed { border-color: var(--green); opacity: 0.6; }
         .quest-title { font-size: 0.8rem; color: #fff; display: block; margin-bottom: 5px; }
-        .quest-reward { font-size: 0.6rem; color: var(--glow); opacity: 0.8; }
         .btn-start { width: 100%; margin-top: 10px; background: none; border: 1px solid var(--glow); color: var(--glow); padding: 10px; font-family: 'Share Tech Mono'; cursor: pointer; }
+        .btn-start:disabled { border-color: var(--green); color: var(--green); cursor: default; }
 
-        /* FOCUS MODE OVERLAY */
+        /* FOCUS MODE */
         #focus-mode { position: fixed; inset: 0; background: #000; z-index: 2000; display: none; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 30px; }
         .timer-display { font-size: 4rem; font-weight: bold; margin-bottom: 20px; }
         .penalty-notice { color: var(--red); font-size: 0.7rem; margin-top: 10px; animation: flash 1s infinite; display: none; }
         @keyframes flash { 50% { opacity: 0; } }
-        .quote-display { font-size: 0.8rem; color: #fff; line-height: 1.6; font-style: italic; max-width: 300px; }
 
         /* STATS FOOTER */
         .footer { position: fixed; bottom: 0; width: 100%; padding: 20px; background: #000; border-top: 1px solid rgba(255, 157, 0, 0.2); display: flex; justify-content: space-around; }
@@ -39,34 +48,31 @@
 </head>
 <body>
 
-    <!-- FOCUS MODE -->
     <div id="focus-mode">
-        <div id="p-notice" class="penalty-notice">INTEGRITY_BREACH: +10s PENALTY ADDED</div>
+        <div id="p-notice" class="penalty-notice">INTEGRITY_BREACH: +10s PENALTY</div>
         <div class="timer-display" id="timer">00</div>
-        <div class="quote-display" id="quote">"I CAN DO ALL THINGS THROUGH CHRIST WHO STRENGTHENS ME."</div>
-        <div style="margin-top:40px; font-size:0.6rem; opacity:0.4;">DO NOT EXIT APP // FOCUS ACTIVE</div>
+        <div id="quote" style="font-size:0.8rem; font-style:italic; line-height:1.6; max-width: 300px;"></div>
     </div>
 
     <div class="header">
         <div class="rank-tag" id="rank-name">CADET [LVL 0]</div>
+        <div class="streak-tag" id="streak-val">DAILY_STREAK: 0 DAYS</div>
         <div class="xp-bar-wrap"><div id="xp-fill"></div></div>
     </div>
 
-    <div class="content" id="quest-list">
-        <!-- Quests will be injected here -->
-    </div>
+    <div class="content" id="quest-list"></div>
 
     <div class="footer">
-        <div class="stat-box"><span class="stat-val" id="stat-kc">0</span><span class="stat-lbl">KINETIC_CREDITS</span></div>
-        <div class="stat-box"><span class="stat-val" id="stat-lvl">0</span><span class="stat-lbl">CURRENT_LEVEL</span></div>
+        <div class="stat-box"><span class="stat-val" id="stat-kc">0</span><span class="stat-lbl">KC_CREDITS</span></div>
+        <div class="stat-box"><span class="stat-val" id="stat-lvl">0</span><span class="stat-lbl">LVL</span></div>
     </div>
 
     <script>
-        // SYSTEM DATA
         const quests = [
-            { id: 'q1', title: "Pectoral Wall Initiation", type: "reps", amt: 20, time: 30, xp: 20, kc: 50, desc: "20 Wall Push-ups" },
-            { id: 'q2', title: "Structural Integrity", type: "static", amt: 20, time: 20, xp: 15, kc: 40, desc: "20 Sec Forearm Plank" },
-            { id: 'q3', title: "Engine Stamina Burn", type: "static", amt: 45, time: 45, xp: 30, kc: 80, desc: "45 Sec Shadow Boxing" }
+            { id: 'q1', title: "Pectoral Wall Initiation", time: 45, xp: 20, kc: 50, desc: "20 Wall Push-ups" },
+            { id: 'q2', title: "Structural Integrity", time: 20, xp: 15, kc: 40, desc: "20 Sec Plank" },
+            { id: 'q3', title: "Engine Stamina Burn", time: 45, xp: 30, kc: 80, desc: "45 Sec Shadow Boxing" },
+            { id: 'q4', title: "Metabolic Kickstart", time: 60, xp: 40, kc: 100, desc: "60 Sec High Knees" }
         ];
 
         const scriptures = [
@@ -77,21 +83,34 @@
             "PROVERBS 14:23 - ALL HARD WORK BRINGS A PROFIT."
         ];
 
-        let state = JSON.parse(localStorage.getItem('kinetic_save')) || { xp: 0, level: 0, kc: 0 };
+        let state = JSON.parse(localStorage.getItem('kinetic_save_v1')) || { 
+            xp: 0, level: 0, kc: 0, streak: 0, lastDate: "", completedToday: [] 
+        };
+
         let activeQuest = null;
         let timeLeft = 0;
         let timerRunning = false;
-        let penaltyAdded = false;
 
         function renderQuests() {
+            const today = new Date().toDateString();
+            if (state.lastDate !== today) {
+                state.completedToday = [];
+                state.lastDate = today;
+                save();
+            }
             const list = document.getElementById('quest-list');
-            list.innerHTML = quests.map(q => `
-                <div class="quest-card">
-                    <span class="quest-title">>> ${q.title}</span>
-                    <div class="quest-reward">${q.desc} | REWARD: ${q.xp}XP / ${q.kc}KC</div>
-                    <button class="btn-start" onclick="startQuest('${q.id}')">[ START_PROTOCOL ]</button>
-                </div>
-            `).join('');
+            list.innerHTML = quests.map(q => {
+                const isDone = state.completedToday.includes(q.id);
+                return `
+                    <div class="quest-card ${isDone ? 'completed' : ''}">
+                        <span class="quest-title">${isDone ? '[SECURED]' : '>>'} ${q.title}</span>
+                        <div style="font-size:0.6rem; opacity:0.6; margin-bottom:5px;">${q.desc}</div>
+                        <button class="btn-start" ${isDone ? 'disabled' : ''} onclick="startQuest('${q.id}')">
+                            ${isDone ? 'COMPLETED_FOR_TODAY' : '[ START_PROTOCOL ]'}
+                        </button>
+                    </div>
+                `;
+            }).join('');
         }
 
         function startQuest(id) {
@@ -101,17 +120,12 @@
             document.getElementById('quote').innerText = scriptures[Math.floor(Math.random() * scriptures.length)];
             document.getElementById('focus-mode').style.display = 'flex';
             document.getElementById('p-notice').style.display = 'none';
-            penaltyAdded = false;
             timerRunning = true;
         }
 
-        // INTEGRITY PROTOCOL
         document.addEventListener("visibilitychange", () => {
             if (document.hidden && timerRunning) {
-                // BREACH DETECTED
                 timeLeft += 10;
-                penaltyAdded = true;
-                document.getElementById('timer').innerText = timeLeft;
                 document.getElementById('p-notice').style.display = 'block';
             }
         });
@@ -120,9 +134,7 @@
             if (timerRunning && timeLeft > 0) {
                 timeLeft--;
                 document.getElementById('timer').innerText = timeLeft;
-                if (timeLeft <= 0) {
-                    completeQuest();
-                }
+                if (timeLeft <= 0) completeQuest();
             }
         }, 1000);
 
@@ -130,30 +142,29 @@
             timerRunning = false;
             state.xp += activeQuest.xp;
             state.kc += activeQuest.kc;
-            
-            // Level Calculation
-            state.level = Math.floor(state.xp / 100);
-            
-            localStorage.setItem('kinetic_save', JSON.stringify(state));
+            state.completedToday.push(activeQuest.id);
+            if (state.completedToday.length === 1) state.streak++;
+            state.level = Math.floor(state.xp / 150);
+            save();
             document.getElementById('focus-mode').style.display = 'none';
             updateHUD();
-            alert(`PROTOCOL COMPLETE: +${activeQuest.xp}XP / +${activeQuest.kc}KC`);
+            renderQuests();
         }
 
+        function save() { localStorage.setItem('kinetic_save_v1', JSON.stringify(state)); }
+
         function updateHUD() {
-            const ranks = ["CADET", "HUNTER", "GUARDIAN", "MASTER ARCHITECT", "ASCENDED"];
+            const ranks = ["CADET", "HUNTER", "GUARDIAN", "VANGUARD", "MASTER ARCHITECT", "ASCENDED"];
             const rankIdx = Math.min(state.level, ranks.length - 1);
-            
             document.getElementById('rank-name').innerText = `${ranks[rankIdx]} [LVL ${state.level}]`;
             document.getElementById('stat-kc').innerText = state.kc;
             document.getElementById('stat-lvl').innerText = state.level;
-            
-            const progress = (state.xp % 100);
-            document.getElementById('xp-fill').style.width = progress + "%";
+            document.getElementById('streak-val').innerText = `DAILY_STREAK: ${state.streak} DAYS`;
+            document.getElementById('xp-fill').style.width = Math.min(100, (state.xp % 150) / 1.5) + "%";
         }
 
         renderQuests();
         updateHUD();
     </script>
 </body>
-                                </html>
+</html> 
