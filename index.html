@@ -6,7 +6,7 @@
     <meta name="theme-color" content="#ff9d00">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>Kinetic Core | Vitality</title>
+    <title>Kinetic Core | Volume</title>
     
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="icon.png">
@@ -17,164 +17,115 @@
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: var(--bg); color: var(--glow); font-family: 'Share Tech Mono', monospace; overflow: hidden; text-transform: uppercase; }
 
-        /* JARVIS LOADER */
+        /* LOADER */
         #loader { position: fixed; inset: 0; background: #000; z-index: 3000; display: flex; flex-direction: column; justify-content: center; align-items: center; transition: opacity 1s; }
-        
-        .pacer-ring { 
-            width: 120px; height: 120px; 
-            border: 2px solid var(--glow); 
-            border-radius: 50%; 
-            display: flex; justify-content: center; align-items: center;
-            animation: breathe 4s ease-in-out infinite;
-            box-shadow: 0 0 20px rgba(255, 157, 0, 0.2);
-            margin-bottom: 40px;
-        }
-        .pacer-inner { width: 80%; height: 80%; border: 1px dashed var(--glow); border-radius: 50%; animation: spin 10s linear infinite; }
-        
-        @keyframes breathe { 0%, 100% { transform: scale(0.8); opacity: 0.3; } 50% { transform: scale(1.1); opacity: 1; box-shadow: 0 0 40px var(--glow); } }
-        @keyframes spin { to { transform: rotate(360deg); } }
+        .pacer-ring { width: 100px; height: 100px; border: 2px solid var(--glow); border-radius: 50%; animation: breathe 4s ease-in-out infinite; margin-bottom: 30px; }
+        @keyframes breathe { 0%, 100% { transform: scale(0.8); opacity: 0.3; } 50% { transform: scale(1.1); opacity: 1; } }
+        .load-bar-wrap { width: 180px; height: 2px; background: rgba(255, 157, 0, 0.1); }
+        #load-bar-fill { width: 0%; height: 100%; background: var(--glow); }
 
-        .load-text { font-size: 0.7rem; letter-spacing: 4px; margin-bottom: 15px; text-align: center; height: 20px; }
-        .load-bar-wrap { width: 200px; height: 2px; background: rgba(255, 157, 0, 0.1); border-radius: 2px; overflow: hidden; }
-        #load-bar-fill { width: 0%; height: 100%; background: var(--glow); box-shadow: 0 0 10px var(--glow); }
-
-        /* HUD TOP */
-        .header { padding: 20px; text-align: center; border-bottom: 1px solid rgba(255, 157, 0, 0.2); background: rgba(0,0,0,0.9); }
-        .rank-tag { font-size: 0.7rem; color: #fff; letter-spacing: 3px; margin-bottom: 5px; }
-        .streak-tag { font-size: 0.6rem; color: var(--green); }
-        .xp-bar-wrap { width: 100%; height: 4px; background: var(--dark); margin-top: 10px; }
+        /* HUD */
+        .header { padding: 15px; text-align: center; border-bottom: 1px solid rgba(255, 157, 0, 0.2); }
+        .rank-tag { font-size: 0.7rem; color: #fff; letter-spacing: 2px; }
+        .xp-bar-wrap { width: 100%; height: 3px; background: var(--dark); margin-top: 10px; }
         #xp-fill { height: 100%; background: var(--glow); width: 0%; transition: width 0.5s; }
 
-        /* MAIN AREA */
-        .content { padding: 20px; height: calc(100% - 200px); overflow-y: auto; scrollbar-width: none; }
+        /* QUESTS */
+        .content { padding: 15px; height: calc(100% - 180px); overflow-y: auto; }
         .quest-card { border: 1px solid rgba(255, 157, 0, 0.2); padding: 15px; margin-bottom: 15px; background: rgba(255,255,255,0.02); }
         .quest-card.completed { border-color: var(--green); opacity: 0.5; }
-        .quest-title { font-size: 0.8rem; color: #fff; display: block; margin-bottom: 5px; }
+        .set-counter { font-size: 0.6rem; color: #fff; margin-top: 5px; display: block; }
         .btn-start { width: 100%; margin-top: 10px; background: none; border: 1px solid var(--glow); color: var(--glow); padding: 10px; font-family: 'Share Tech Mono'; cursor: pointer; }
         .btn-start:disabled { border-color: var(--green); color: var(--green); }
 
         /* FOCUS MODE */
-        #focus-mode { position: fixed; inset: 0; background: #000; z-index: 2000; display: none; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 30px; }
-        .timer-display { font-size: 4rem; font-weight: bold; margin-bottom: 20px; }
+        #focus-mode { position: fixed; inset: 0; background: #000; z-index: 2000; display: none; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 20px; }
+        .timer-display { font-size: 5rem; font-weight: bold; }
         .penalty-notice { color: var(--red); font-size: 0.7rem; margin-top: 10px; animation: flash 1s infinite; display: none; }
         @keyframes flash { 50% { opacity: 0; } }
 
-        /* STATS FOOTER */
-        .footer { position: fixed; bottom: 0; width: 100%; padding: 20px; background: #000; border-top: 1px solid rgba(255, 157, 0, 0.2); display: flex; justify-content: space-around; }
-        .stat-box { text-align: center; }
-        .stat-val { font-size: 1.2rem; font-weight: bold; display: block; }
+        .footer { position: fixed; bottom: 0; width: 100%; padding: 15px; background: #000; border-top: 1px solid rgba(255, 157, 0, 0.2); display: flex; justify-content: space-around; }
+        .stat-val { font-size: 1rem; font-weight: bold; display: block; text-align: center;}
         .stat-lbl { font-size: 0.5rem; opacity: 0.5; }
     </style>
 </head>
 <body>
 
-    <!-- INITIALIZATION SCREEN -->
     <div id="loader">
-        <div class="pacer-ring"><div class="pacer-inner"></div></div>
-        <div class="load-text" id="load-msg">CALIBRATING_VITALITY...</div>
-        <div class="load-bar-wrap"><div id="load-bar-fill"></div></div>
+        <div class="pacer-ring"></div>
+        <div id="load-bar-fill" class="load-bar-wrap"></div>
     </div>
 
-    <!-- FOCUS MODE -->
     <div id="focus-mode">
         <div id="p-notice" class="penalty-notice">INTEGRITY_BREACH: +10s PENALTY</div>
+        <div style="font-size: 0.8rem; margin-bottom: 10px;" id="focus-set-info">SET 1 / 4</div>
         <div class="timer-display" id="timer">00</div>
-        <div id="quote" style="font-size:0.8rem; font-style:italic; line-height:1.6; max-width: 300px;"></div>
+        <div id="quote" style="font-size:0.7rem; font-style:italic; line-height:1.5; padding:20px;"></div>
     </div>
 
     <div class="header">
         <div class="rank-tag" id="rank-name">CADET [LVL 0]</div>
-        <div class="streak-tag" id="streak-val">DAILY_STREAK: 0 DAYS</div>
+        <div id="streak-val" style="font-size:0.5rem; color:var(--green); margin-top:5px;">STREAK: 0 DAYS</div>
         <div class="xp-bar-wrap"><div id="xp-fill"></div></div>
     </div>
 
     <div class="content" id="quest-list"></div>
 
     <div class="footer">
-        <div class="stat-box"><span class="stat-val" id="stat-kc">0</span><span class="stat-lbl">KC_CREDITS</span></div>
-        <div class="stat-box"><span class="stat-val" id="stat-lvl">0</span><span class="stat-lbl">LEVEL</span></div>
+        <div><span class="stat-val" id="stat-kc">0</span><span class="stat-lbl">CREDITS</span></div>
+        <div><span class="stat-val" id="stat-lvl">0</span><span class="stat-lbl">LEVEL</span></div>
     </div>
 
     <script>
-        // 1. INITIALIZATION SEQUENCE (8 SECONDS)
-        const loadQuotes = [
-            "SCANNING_PECTORAL_WALL...",
-            "REMOVING_LIMITATIONS...",
-            "LIFE MIGHT BE STORMY...",
-            "IT CAN'T RAIN FOREVER...",
-            "SYNCING_WITH_AGNES_OS...",
-            "BYPASSING_WEAKNESS..."
-        ];
-
+        // 1. LOADER
         window.onload = () => {
-            let progress = 0;
-            const bar = document.getElementById('load-bar-fill');
-            const msg = document.getElementById('load-msg');
-
-            const loadTimer = setInterval(() => {
-                progress += 1.25; // Spreads over 8 seconds approx.
-                bar.style.width = progress + "%";
-                if (Math.floor(progress) % 20 === 0) {
-                    msg.innerText = loadQuotes[Math.floor(Math.random() * loadQuotes.length)];
-                }
-
-                if (progress >= 100) {
-                    clearInterval(loadTimer);
-                    document.getElementById('loader').style.opacity = '0';
-                    setTimeout(() => {
-                        document.getElementById('loader').style.display = 'none';
-                    }, 1000);
-                }
+            let p = 0;
+            const t = setInterval(() => {
+                p += 2;
+                document.getElementById('load-bar-fill').style.width = p + "%";
+                if (p >= 100) { clearInterval(t); document.getElementById('loader').style.opacity = '0'; setTimeout(() => document.getElementById('loader').style.display = 'none', 1000); }
             }, 100);
         };
 
-        // 2. GAME LOGIC
+        // 2. QUEST DATA (SETS & REPS ADDED)
         const quests = [
-            { id: 'q1', title: "Pectoral Wall Initiation", time: 45, xp: 20, kc: 50, desc: "20 Wall Push-ups" },
-            { id: 'q2', title: "Structural Integrity", time: 20, xp: 15, kc: 40, desc: "20 Sec Plank" },
-            { id: 'q3', title: "Engine Stamina Burn", time: 45, xp: 30, kc: 80, desc: "45 Sec Shadow Boxing" },
-            { id: 'q4', title: "Metabolic Kickstart", time: 60, xp: 40, kc: 100, desc: "60 Sec High Knees" }
+            { id: 'q1', title: "Pectoral Wall Initiation", sets: 4, reps: 15, time: 30, xp: 40, kc: 100, type: 'reps' },
+            { id: 'q2', title: "Structural Integrity", sets: 3, reps: 0, time: 30, xp: 30, kc: 80, type: 'static' },
+            { id: 'q3', title: "Engine Stamina Burn", sets: 3, reps: 0, time: 45, xp: 50, kc: 150, type: 'burn' }
         ];
 
-        const scriptures = [
-            "PHILIPPIANS 4:13 - I CAN DO ALL THINGS THROUGH CHRIST.",
-            "GALATIANS 6:9 - DO NOT GROW WEARY IN DOING GOOD.",
-            "1 CORINTHIANS 9:27 - I DISCIPLINE MY BODY.",
-            "PROVERBS 14:23 - ALL HARD WORK BRINGS A PROFIT."
-        ];
+        const scriptures = ["PHILIPPIANS 4:13", "GALATIANS 6:9", "1 CORINTHIANS 9:27", "ISAIAH 40:31"];
 
-        let state = JSON.parse(localStorage.getItem('kinetic_save_v1')) || { 
-            xp: 0, level: 0, kc: 0, streak: 0, lastDate: "", completedToday: [] 
-        };
-
-        let activeQuest = null;
-        let timeLeft = 0;
-        let timerRunning = false;
+        let ST = JSON.parse(localStorage.getItem('kinetic_v1_4')) || { xp: 0, level: 0, kc: 0, streak: 0, lastDate: "", completed: [], setProgress: {} };
 
         function renderQuests() {
             const today = new Date().toDateString();
-            if (state.lastDate !== today) {
-                state.completedToday = [];
-                state.lastDate = today;
-                save();
-            }
-            const list = document.getElementById('quest-list');
-            list.innerHTML = quests.map(q => {
-                const isDone = state.completedToday.includes(q.id);
+            if (ST.lastDate !== today) { ST.completed = []; ST.setProgress = {}; ST.lastDate = today; save(); }
+
+            document.getElementById('quest-list').innerHTML = quests.map(q => {
+                const isDone = ST.completed.includes(q.id);
+                const currentSet = ST.setProgress[q.id] || 0;
                 return `
                     <div class="quest-card ${isDone ? 'completed' : ''}">
-                        <span class="quest-title">${isDone ? '[SECURED]' : '>>'} ${q.title}</span>
-                        <div style="font-size:0.6rem; opacity:0.6; margin-bottom:5px;">${q.desc}</div>
+                        <div style="font-size:0.8rem; color:#fff;">${isDone ? '[SECURED]' : '>>'} ${q.title}</div>
+                        <span class="set-counter">${q.type === 'reps' ? `${q.reps} REPS PER SET` : ''} | SETS: ${currentSet}/${q.sets}</span>
                         <button class="btn-start" ${isDone ? 'disabled' : ''} onclick="startQuest('${q.id}')">
-                            ${isDone ? 'COMPLETED' : '[ START_PROTOCOL ]'}
+                            ${isDone ? 'MISSION_ACCOMPLISHED' : currentSet > 0 ? '[ CONTINUE_SETS ]' : '[ START_PROTOCOL ]'}
                         </button>
                     </div>
                 `;
             }).join('');
         }
 
+        let activeQuest = null;
+        let timeLeft = 0;
+        let timerRunning = false;
+
         function startQuest(id) {
             activeQuest = quests.find(q => q.id === id);
+            const currentSet = (ST.setProgress[id] || 0) + 1;
+            document.getElementById('focus-set-info').innerText = `SET ${currentSet} / ${activeQuest.sets}`;
+            
             timeLeft = activeQuest.time;
             document.getElementById('timer').innerText = timeLeft;
             document.getElementById('quote').innerText = scriptures[Math.floor(Math.random() * scriptures.length)];
@@ -184,43 +135,48 @@
         }
 
         document.addEventListener("visibilitychange", () => {
-            if (document.hidden && timerRunning) {
-                timeLeft += 10;
-                document.getElementById('p-notice').style.display = 'block';
-            }
+            if (document.hidden && timerRunning) { timeLeft += 10; document.getElementById('p-notice').style.display = 'block'; }
         });
 
         setInterval(() => {
             if (timerRunning && timeLeft > 0) {
                 timeLeft--;
                 document.getElementById('timer').innerText = timeLeft;
-                if (timeLeft <= 0) completeQuest();
+                if (timeLeft <= 0) finishSet();
             }
         }, 1000);
 
-        function completeQuest() {
+        function finishSet() {
             timerRunning = false;
-            state.xp += activeQuest.xp;
-            state.kc += activeQuest.kc;
-            state.completedToday.push(activeQuest.id);
-            if (state.completedToday.length === 1) state.streak++;
-            state.level = Math.floor(state.xp / 150);
+            if (!ST.setProgress[activeQuest.id]) ST.setProgress[activeQuest.id] = 0;
+            ST.setProgress[activeQuest.id]++;
+
+            if (ST.setProgress[activeQuest.id] >= activeQuest.sets) {
+                ST.xp += activeQuest.xp;
+                ST.kc += activeQuest.kc;
+                ST.completed.push(activeQuest.id);
+                if (ST.completed.length === 1) ST.streak++;
+                ST.level = Math.floor(ST.xp / 200);
+                alert("QUEST FULLY SECURED. XP AND KC INJECTED.");
+            } else {
+                alert(`SET ${ST.setProgress[activeQuest.id]} COMPLETE. REST 30 SECONDS THEN START NEXT SET.`);
+            }
+
             save();
             document.getElementById('focus-mode').style.display = 'none';
             updateHUD();
             renderQuests();
         }
 
-        function save() { localStorage.setItem('kinetic_save_v1', JSON.stringify(state)); }
+        function save() { localStorage.setItem('kinetic_v1_4', JSON.stringify(ST)); }
 
         function updateHUD() {
             const ranks = ["CADET", "HUNTER", "GUARDIAN", "VANGUARD", "MASTER ARCHITECT", "ASCENDED"];
-            const rankIdx = Math.min(state.level, ranks.length - 1);
-            document.getElementById('rank-name').innerText = `${ranks[rankIdx]} [LVL ${state.level}]`;
-            document.getElementById('stat-kc').innerText = state.kc;
-            document.getElementById('stat-lvl').innerText = state.level;
-            document.getElementById('streak-val').innerText = `DAILY_STREAK: ${state.streak} DAYS`;
-            document.getElementById('xp-fill').style.width = Math.min(100, (state.xp % 150) / 1.5) + "%";
+            document.getElementById('rank-name').innerText = `${ranks[Math.min(ST.level, 5)]} [LVL ${ST.level}]`;
+            document.getElementById('stat-kc').innerText = ST.kc;
+            document.getElementById('stat-lvl').innerText = ST.level;
+            document.getElementById('streak-val').innerText = `DAILY_STREAK: ${ST.streak} DAYS`;
+            document.getElementById('xp-fill').style.width = (ST.xp % 200) / 2 + "%";
         }
 
         renderQuests();
