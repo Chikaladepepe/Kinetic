@@ -6,7 +6,7 @@
     <meta name="theme-color" content="#ff9d00">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>Kinetic Core | Volume</title>
+    <title>Kinetic Core | v1.5</title>
     
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="icon.png">
@@ -17,32 +17,37 @@
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: var(--bg); color: var(--glow); font-family: 'Share Tech Mono', monospace; overflow: hidden; text-transform: uppercase; }
 
-        /* LOADER */
+        /* JARVIS LOADER */
         #loader { position: fixed; inset: 0; background: #000; z-index: 3000; display: flex; flex-direction: column; justify-content: center; align-items: center; transition: opacity 1s; }
         .pacer-ring { width: 100px; height: 100px; border: 2px solid var(--glow); border-radius: 50%; animation: breathe 4s ease-in-out infinite; margin-bottom: 30px; }
         @keyframes breathe { 0%, 100% { transform: scale(0.8); opacity: 0.3; } 50% { transform: scale(1.1); opacity: 1; } }
         .load-bar-wrap { width: 180px; height: 2px; background: rgba(255, 157, 0, 0.1); }
         #load-bar-fill { width: 0%; height: 100%; background: var(--glow); }
 
-        /* HUD */
-        .header { padding: 15px; text-align: center; border-bottom: 1px solid rgba(255, 157, 0, 0.2); }
+        /* HUD TOP */
+        .header { padding: 15px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(255, 157, 0, 0.2); background: #000; }
+        .rank-info { text-align: left; }
         .rank-tag { font-size: 0.7rem; color: #fff; letter-spacing: 2px; }
-        .xp-bar-wrap { width: 100%; height: 3px; background: var(--dark); margin-top: 10px; }
-        #xp-fill { height: 100%; background: var(--glow); width: 0%; transition: width 0.5s; }
+        
+        /* HOLOGRAPHIC SILHOUETTE */
+        #silhouette { width: 40px; height: 60px; opacity: 0.8; }
+        .sil-part { stroke: #333; stroke-width: 2; fill: none; transition: 0.5s; }
+        .glow-active { stroke: var(--glow); filter: drop-shadow(0 0 5px var(--glow)); }
 
-        /* QUESTS */
-        .content { padding: 15px; height: calc(100% - 180px); overflow-y: auto; }
+        /* MAIN AREA */
+        .content { padding: 15px; height: calc(100% - 240px); overflow-y: auto; scrollbar-width: none; }
         .quest-card { border: 1px solid rgba(255, 157, 0, 0.2); padding: 15px; margin-bottom: 15px; background: rgba(255,255,255,0.02); }
         .quest-card.completed { border-color: var(--green); opacity: 0.5; }
-        .set-counter { font-size: 0.6rem; color: #fff; margin-top: 5px; display: block; }
-        .btn-start { width: 100%; margin-top: 10px; background: none; border: 1px solid var(--glow); color: var(--glow); padding: 10px; font-family: 'Share Tech Mono'; cursor: pointer; }
-        .btn-start:disabled { border-color: var(--green); color: var(--green); }
 
-        /* FOCUS MODE */
+        /* SUGAR QUARANTINE */
+        .malware-box { border: 1px solid var(--red); padding: 10px; margin-bottom: 15px; text-align: center; background: rgba(255, 77, 77, 0.05); }
+        .btn-malware { background: var(--red); color: #000; border: none; padding: 5px 10px; font-family: 'Share Tech Mono'; font-weight: bold; cursor: pointer; margin-top: 5px; }
+        .btn-malware:disabled { background: #333; color: #666; cursor: default; }
+
+        /* FOCUS & REST MODE */
         #focus-mode { position: fixed; inset: 0; background: #000; z-index: 2000; display: none; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 20px; }
         .timer-display { font-size: 5rem; font-weight: bold; }
-        .penalty-notice { color: var(--red); font-size: 0.7rem; margin-top: 10px; animation: flash 1s infinite; display: none; }
-        @keyframes flash { 50% { opacity: 0; } }
+        .mode-label { font-size: 0.8rem; letter-spacing: 5px; margin-bottom: 10px; color: var(--glow); }
 
         .footer { position: fixed; bottom: 0; width: 100%; padding: 15px; background: #000; border-top: 1px solid rgba(255, 157, 0, 0.2); display: flex; justify-content: space-around; }
         .stat-val { font-size: 1rem; font-weight: bold; display: block; text-align: center;}
@@ -56,20 +61,40 @@
         <div id="load-bar-fill" class="load-bar-wrap"></div>
     </div>
 
+    <!-- FOCUS / REST OVERLAY -->
     <div id="focus-mode">
-        <div id="p-notice" class="penalty-notice">INTEGRITY_BREACH: +10s PENALTY</div>
-        <div style="font-size: 0.8rem; margin-bottom: 10px;" id="focus-set-info">SET 1 / 4</div>
+        <div id="p-notice" style="color:var(--red); font-size:0.6rem; margin-bottom:10px; display:none;">INTEGRITY_BREACH: +10s PENALTY</div>
+        <div id="mode-text" class="mode-label">WORK_PHASE</div>
+        <div id="focus-set-info" style="font-size:0.7rem; margin-bottom:10px;">SET 1 / 4</div>
         <div class="timer-display" id="timer">00</div>
-        <div id="quote" style="font-size:0.7rem; font-style:italic; line-height:1.5; padding:20px;"></div>
+        <div id="quote" style="font-size:0.7rem; font-style:italic; line-height:1.5; padding:20px; color:#fff;"></div>
     </div>
 
     <div class="header">
-        <div class="rank-tag" id="rank-name">CADET [LVL 0]</div>
-        <div id="streak-val" style="font-size:0.5rem; color:var(--green); margin-top:5px;">STREAK: 0 DAYS</div>
-        <div class="xp-bar-wrap"><div id="xp-fill"></div></div>
+        <div class="rank-info">
+            <div class="rank-tag" id="rank-name">CADET [LVL 0]</div>
+            <div id="streak-val" style="font-size:0.5rem; color:var(--green); margin-top:3px;">STREAK: 0 DAYS</div>
+        </div>
+        <!-- HOLOGRAPHIC SILHOUETTE -->
+        <svg id="silhouette" viewBox="0 0 50 80">
+            <path class="sil-part" id="sil-body" d="M25 10 L15 25 L15 50 L20 75 M25 10 L35 25 L35 50 L30 75" />
+            <circle class="sil-part" id="sil-head" cx="25" cy="8" r="5" />
+            <circle class="sil-part" id="sil-chest" cx="25" cy="22" r="7" />
+        </svg>
     </div>
 
-    <div class="content" id="quest-list"></div>
+    <div class="content">
+        <div id="xp-bar" class="load-bar-wrap" style="width:100%; margin-bottom:20px;"><div id="xp-fill" style="height:100%; background:var(--glow); width:0%;"></div></div>
+        
+        <!-- SUGAR QUARANTINE -->
+        <div class="malware-box" id="malware-ui">
+            <div style="font-size:0.6rem; color:var(--red);">[!] WARNING: MALWARE_DETECTION (SUGAR)</div>
+            <button class="btn-malware" id="malware-btn" onclick="reportMalware()">REPORT_INTAKE</button>
+            <div id="malware-status" style="font-size:0.5rem; margin-top:5px; display:none;">SYSTEM_COMPROMISED: -50 KC PENALTY APPLIED</div>
+        </div>
+
+        <div id="quest-list"></div>
+    </div>
 
     <div class="footer">
         <div><span class="stat-val" id="stat-kc">0</span><span class="stat-lbl">CREDITS</span></div>
@@ -77,40 +102,45 @@
     </div>
 
     <script>
-        // 1. LOADER
         window.onload = () => {
             let p = 0;
             const t = setInterval(() => {
-                p += 2;
-                document.getElementById('load-bar-fill').style.width = p + "%";
+                p += 2; document.getElementById('load-bar-fill').style.width = p + "%";
                 if (p >= 100) { clearInterval(t); document.getElementById('loader').style.opacity = '0'; setTimeout(() => document.getElementById('loader').style.display = 'none', 1000); }
             }, 100);
         };
 
-        // 2. QUEST DATA (SETS & REPS ADDED)
         const quests = [
-            { id: 'q1', title: "Pectoral Wall Initiation", sets: 4, reps: 15, time: 30, xp: 40, kc: 100, type: 'reps' },
-            { id: 'q2', title: "Structural Integrity", sets: 3, reps: 0, time: 30, xp: 30, kc: 80, type: 'static' },
-            { id: 'q3', title: "Engine Stamina Burn", sets: 3, reps: 0, time: 45, xp: 50, kc: 150, type: 'burn' }
+            { id: 'q1', title: "Pectoral Wall Initiation", sets: 4, reps: 15, workTime: 35, restTime: 30, xp: 50, kc: 100 },
+            { id: 'q2', title: "Structural Integrity", sets: 3, reps: 0, workTime: 30, restTime: 20, xp: 30, kc: 80 },
+            { id: 'q3', title: "Engine Stamina Burn", sets: 3, reps: 0, workTime: 60, restTime: 30, xp: 60, kc: 150 }
         ];
 
-        const scriptures = ["PHILIPPIANS 4:13", "GALATIANS 6:9", "1 CORINTHIANS 9:27", "ISAIAH 40:31"];
+        const scriptures = ["PHILIPPIANS 4:13", "GALATIANS 6:9", "1 CORINTHIANS 9:27", "ISAIAH 40:31", "1 TIMOTHY 4:8"];
 
-        let ST = JSON.parse(localStorage.getItem('kinetic_v1_4')) || { xp: 0, level: 0, kc: 0, streak: 0, lastDate: "", completed: [], setProgress: {} };
+        let ST = JSON.parse(localStorage.getItem('kinetic_v1_5')) || { 
+            xp: 0, level: 0, kc: 0, streak: 0, lastDate: "", completed: [], setProgress: {}, malwareDate: "" 
+        };
 
         function renderQuests() {
             const today = new Date().toDateString();
             if (ST.lastDate !== today) { ST.completed = []; ST.setProgress = {}; ST.lastDate = today; save(); }
+            
+            // Malware UI Reset
+            if (ST.malwareDate === today) {
+                document.getElementById('malware-btn').disabled = true;
+                document.getElementById('malware-status').style.display = 'block';
+            }
 
             document.getElementById('quest-list').innerHTML = quests.map(q => {
                 const isDone = ST.completed.includes(q.id);
                 const currentSet = ST.setProgress[q.id] || 0;
                 return `
                     <div class="quest-card ${isDone ? 'completed' : ''}">
-                        <div style="font-size:0.8rem; color:#fff;">${isDone ? '[SECURED]' : '>>'} ${q.title}</div>
-                        <span class="set-counter">${q.type === 'reps' ? `${q.reps} REPS PER SET` : ''} | SETS: ${currentSet}/${q.sets}</span>
+                        <div style="font-size:0.8rem;">${isDone ? '[SECURED]' : '>>'} ${q.title}</div>
+                        <div style="font-size:0.5rem; opacity:0.6; margin-top:5px;">SETS: ${currentSet}/${q.sets} ${q.reps ? `| ${q.reps} REPS` : ''}</div>
                         <button class="btn-start" ${isDone ? 'disabled' : ''} onclick="startQuest('${q.id}')">
-                            ${isDone ? 'MISSION_ACCOMPLISHED' : currentSet > 0 ? '[ CONTINUE_SETS ]' : '[ START_PROTOCOL ]'}
+                            ${isDone ? 'OPTIMIZED' : '[ START_PHASE ]'}
                         </button>
                     </div>
                 `;
@@ -120,18 +150,36 @@
         let activeQuest = null;
         let timeLeft = 0;
         let timerRunning = false;
+        let isResting = false;
 
         function startQuest(id) {
             activeQuest = quests.find(q => q.id === id);
-            const currentSet = (ST.setProgress[id] || 0) + 1;
+            isResting = false;
+            runPhase();
+        }
+
+        function runPhase() {
+            const currentSet = (ST.setProgress[activeQuest.id] || 0) + 1;
+            document.getElementById('mode-text').innerText = isResting ? "REST_CALIBRATION" : "WORK_PHASE";
+            document.getElementById('mode-text').style.color = isResting ? "var(--green)" : "var(--glow)";
             document.getElementById('focus-set-info').innerText = `SET ${currentSet} / ${activeQuest.sets}`;
             
-            timeLeft = activeQuest.time;
+            timeLeft = isResting ? activeQuest.restTime : activeQuest.workTime;
             document.getElementById('timer').innerText = timeLeft;
-            document.getElementById('quote').innerText = scriptures[Math.floor(Math.random() * scriptures.length)];
+            document.getElementById('quote').innerText = isResting ? "RECALIBRATING_HEART_RATE..." : scriptures[Math.floor(Math.random() * scriptures.length)];
+            
             document.getElementById('focus-mode').style.display = 'flex';
-            document.getElementById('p-notice').style.display = 'none';
             timerRunning = true;
+        }
+
+        function reportMalware() {
+            if(confirm("CONFIRM SUGAR INTAKE? -50 KINETIC CREDITS PENALTY.")) {
+                ST.kc = Math.max(0, ST.kc - 50);
+                ST.malwareDate = new Date().toDateString();
+                save();
+                updateHUD();
+                renderQuests();
+            }
         }
 
         document.addEventListener("visibilitychange", () => {
@@ -142,45 +190,63 @@
             if (timerRunning && timeLeft > 0) {
                 timeLeft--;
                 document.getElementById('timer').innerText = timeLeft;
-                if (timeLeft <= 0) finishSet();
+                if (timeLeft <= 0) handleTimerEnd();
             }
         }, 1000);
 
-        function finishSet() {
+        function handleTimerEnd() {
             timerRunning = false;
-            if (!ST.setProgress[activeQuest.id]) ST.setProgress[activeQuest.id] = 0;
-            ST.setProgress[activeQuest.id]++;
-
-            if (ST.setProgress[activeQuest.id] >= activeQuest.sets) {
-                ST.xp += activeQuest.xp;
-                ST.kc += activeQuest.kc;
-                ST.completed.push(activeQuest.id);
-                if (ST.completed.length === 1) ST.streak++;
-                ST.level = Math.floor(ST.xp / 200);
-                alert("QUEST FULLY SECURED. XP AND KC INJECTED.");
+            if (!isResting) {
+                // Finished a work set
+                if (!ST.setProgress[activeQuest.id]) ST.setProgress[activeQuest.id] = 0;
+                ST.setProgress[activeQuest.id]++;
+                
+                if (ST.setProgress[activeQuest.id] >= activeQuest.sets) {
+                    finishQuest();
+                } else {
+                    isResting = true;
+                    runPhase();
+                }
             } else {
-                alert(`SET ${ST.setProgress[activeQuest.id]} COMPLETE. REST 30 SECONDS THEN START NEXT SET.`);
+                // Finished a rest set
+                isResting = false;
+                runPhase();
             }
-
             save();
+        }
+
+        function finishQuest() {
+            ST.xp += activeQuest.xp;
+            ST.kc += activeQuest.kc;
+            ST.completed.push(activeQuest.id);
+            if (ST.completed.length === 1) ST.streak++;
+            ST.level = Math.floor(ST.xp / 200);
             document.getElementById('focus-mode').style.display = 'none';
             updateHUD();
             renderQuests();
+            alert("OBJECTIVE_SECURED: HARDWARE UPDATED.");
         }
 
-        function save() { localStorage.setItem('kinetic_v1_4', JSON.stringify(ST)); }
+        function save() { localStorage.setItem('kinetic_v1_5', JSON.stringify(ST)); }
 
         function updateHUD() {
             const ranks = ["CADET", "HUNTER", "GUARDIAN", "VANGUARD", "MASTER ARCHITECT", "ASCENDED"];
             document.getElementById('rank-name').innerText = `${ranks[Math.min(ST.level, 5)]} [LVL ${ST.level}]`;
             document.getElementById('stat-kc').innerText = ST.kc;
             document.getElementById('stat-lvl').innerText = ST.level;
-            document.getElementById('streak-val').innerText = `DAILY_STREAK: ${ST.streak} DAYS`;
+            document.getElementById('streak-val').innerText = `STREAK: ${ST.streak} DAYS`;
             document.getElementById('xp-fill').style.width = (ST.xp % 200) / 2 + "%";
+
+            // Silhouette Logic
+            if(ST.level >= 5) document.getElementById('sil-chest').classList.add('glow-active');
+            if(ST.level >= 10) {
+                document.getElementById('sil-body').classList.add('glow-active');
+                document.getElementById('sil-head').classList.add('glow-active');
+            }
         }
 
         renderQuests();
         updateHUD();
     </script>
 </body>
-</html> 
+                                                                                                 </html> 
