@@ -6,32 +6,52 @@
     <meta name="theme-color" content="#ff9d00">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>Kinetic Core | Ascension</title>
+    <title>Kinetic Core | Vitality</title>
     
-    <!-- THE ICON FIX -->
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="icon.png">
-
     <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    
     <style>
         :root { --glow: #ff9d00; --bg: #050505; --red: #ff4d4d; --green: #4dff88; --dark: #1a1000; }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: var(--bg); color: var(--glow); font-family: 'Share Tech Mono', monospace; overflow: hidden; text-transform: uppercase; }
+
+        /* JARVIS LOADER */
+        #loader { position: fixed; inset: 0; background: #000; z-index: 3000; display: flex; flex-direction: column; justify-content: center; align-items: center; transition: opacity 1s; }
+        
+        .pacer-ring { 
+            width: 120px; height: 120px; 
+            border: 2px solid var(--glow); 
+            border-radius: 50%; 
+            display: flex; justify-content: center; align-items: center;
+            animation: breathe 4s ease-in-out infinite;
+            box-shadow: 0 0 20px rgba(255, 157, 0, 0.2);
+            margin-bottom: 40px;
+        }
+        .pacer-inner { width: 80%; height: 80%; border: 1px dashed var(--glow); border-radius: 50%; animation: spin 10s linear infinite; }
+        
+        @keyframes breathe { 0%, 100% { transform: scale(0.8); opacity: 0.3; } 50% { transform: scale(1.1); opacity: 1; box-shadow: 0 0 40px var(--glow); } }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .load-text { font-size: 0.7rem; letter-spacing: 4px; margin-bottom: 15px; text-align: center; height: 20px; }
+        .load-bar-wrap { width: 200px; height: 2px; background: rgba(255, 157, 0, 0.1); border-radius: 2px; overflow: hidden; }
+        #load-bar-fill { width: 0%; height: 100%; background: var(--glow); box-shadow: 0 0 10px var(--glow); }
 
         /* HUD TOP */
         .header { padding: 20px; text-align: center; border-bottom: 1px solid rgba(255, 157, 0, 0.2); background: rgba(0,0,0,0.9); }
         .rank-tag { font-size: 0.7rem; color: #fff; letter-spacing: 3px; margin-bottom: 5px; }
         .streak-tag { font-size: 0.6rem; color: var(--green); }
         .xp-bar-wrap { width: 100%; height: 4px; background: var(--dark); margin-top: 10px; }
-        #xp-fill { height: 100%; background: var(--glow); width: 0%; transition: width 0.5s; box-shadow: 0 0 10px var(--glow); }
+        #xp-fill { height: 100%; background: var(--glow); width: 0%; transition: width 0.5s; }
 
         /* MAIN AREA */
         .content { padding: 20px; height: calc(100% - 200px); overflow-y: auto; scrollbar-width: none; }
         .quest-card { border: 1px solid rgba(255, 157, 0, 0.2); padding: 15px; margin-bottom: 15px; background: rgba(255,255,255,0.02); }
-        .quest-card.completed { border-color: var(--green); opacity: 0.6; }
+        .quest-card.completed { border-color: var(--green); opacity: 0.5; }
         .quest-title { font-size: 0.8rem; color: #fff; display: block; margin-bottom: 5px; }
         .btn-start { width: 100%; margin-top: 10px; background: none; border: 1px solid var(--glow); color: var(--glow); padding: 10px; font-family: 'Share Tech Mono'; cursor: pointer; }
-        .btn-start:disabled { border-color: var(--green); color: var(--green); cursor: default; }
+        .btn-start:disabled { border-color: var(--green); color: var(--green); }
 
         /* FOCUS MODE */
         #focus-mode { position: fixed; inset: 0; background: #000; z-index: 2000; display: none; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 30px; }
@@ -48,6 +68,14 @@
 </head>
 <body>
 
+    <!-- INITIALIZATION SCREEN -->
+    <div id="loader">
+        <div class="pacer-ring"><div class="pacer-inner"></div></div>
+        <div class="load-text" id="load-msg">CALIBRATING_VITALITY...</div>
+        <div class="load-bar-wrap"><div id="load-bar-fill"></div></div>
+    </div>
+
+    <!-- FOCUS MODE -->
     <div id="focus-mode">
         <div id="p-notice" class="penalty-notice">INTEGRITY_BREACH: +10s PENALTY</div>
         <div class="timer-display" id="timer">00</div>
@@ -64,10 +92,43 @@
 
     <div class="footer">
         <div class="stat-box"><span class="stat-val" id="stat-kc">0</span><span class="stat-lbl">KC_CREDITS</span></div>
-        <div class="stat-box"><span class="stat-val" id="stat-lvl">0</span><span class="stat-lbl">LVL</span></div>
+        <div class="stat-box"><span class="stat-val" id="stat-lvl">0</span><span class="stat-lbl">LEVEL</span></div>
     </div>
 
     <script>
+        // 1. INITIALIZATION SEQUENCE (8 SECONDS)
+        const loadQuotes = [
+            "SCANNING_PECTORAL_WALL...",
+            "REMOVING_LIMITATIONS...",
+            "LIFE MIGHT BE STORMY...",
+            "IT CAN'T RAIN FOREVER...",
+            "SYNCING_WITH_AGNES_OS...",
+            "BYPASSING_WEAKNESS..."
+        ];
+
+        window.onload = () => {
+            let progress = 0;
+            const bar = document.getElementById('load-bar-fill');
+            const msg = document.getElementById('load-msg');
+
+            const loadTimer = setInterval(() => {
+                progress += 1.25; // Spreads over 8 seconds approx.
+                bar.style.width = progress + "%";
+                if (Math.floor(progress) % 20 === 0) {
+                    msg.innerText = loadQuotes[Math.floor(Math.random() * loadQuotes.length)];
+                }
+
+                if (progress >= 100) {
+                    clearInterval(loadTimer);
+                    document.getElementById('loader').style.opacity = '0';
+                    setTimeout(() => {
+                        document.getElementById('loader').style.display = 'none';
+                    }, 1000);
+                }
+            }, 100);
+        };
+
+        // 2. GAME LOGIC
         const quests = [
             { id: 'q1', title: "Pectoral Wall Initiation", time: 45, xp: 20, kc: 50, desc: "20 Wall Push-ups" },
             { id: 'q2', title: "Structural Integrity", time: 20, xp: 15, kc: 40, desc: "20 Sec Plank" },
@@ -79,7 +140,6 @@
             "PHILIPPIANS 4:13 - I CAN DO ALL THINGS THROUGH CHRIST.",
             "GALATIANS 6:9 - DO NOT GROW WEARY IN DOING GOOD.",
             "1 CORINTHIANS 9:27 - I DISCIPLINE MY BODY.",
-            "ISAIAH 40:31 - THEY SHALL RUN AND NOT BE WEARY.",
             "PROVERBS 14:23 - ALL HARD WORK BRINGS A PROFIT."
         ];
 
@@ -106,7 +166,7 @@
                         <span class="quest-title">${isDone ? '[SECURED]' : '>>'} ${q.title}</span>
                         <div style="font-size:0.6rem; opacity:0.6; margin-bottom:5px;">${q.desc}</div>
                         <button class="btn-start" ${isDone ? 'disabled' : ''} onclick="startQuest('${q.id}')">
-                            ${isDone ? 'COMPLETED_FOR_TODAY' : '[ START_PROTOCOL ]'}
+                            ${isDone ? 'COMPLETED' : '[ START_PROTOCOL ]'}
                         </button>
                     </div>
                 `;
